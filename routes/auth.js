@@ -3,10 +3,11 @@ const router = express.Router();
 const User = require("../models/Users")
 const { body, query, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
-var jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const jwtSecret = process.env.JWT_SECRET;
+const fetchuser = require("../middleware/fetchuser");
 
-//Add a new User to the User Model - POST
+//Create a new User to the User Model - No login required
 router.post('/createuser', 
     body('name', 'Name cant be empty').notEmpty(),
     body('email', "Invalid Email").isEmail(),
@@ -14,7 +15,7 @@ router.post('/createuser',
     body('password', 'Password must be at least 5 characters').isLength({ min: 5 }),
     async (req,res)=>{
         try{
-            console.log("inside POST endpoint");
+            console.log("inside createuser endpoint");
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 return res.status(400).json({ errors: errors.array() });
@@ -53,6 +54,72 @@ router.post('/createuser',
         }
     }
 )
+
+//Authenticate user - login end point - No Login required
+router.post('/login', 
+    body('password', 'Password cant be empty').notEmpty(),
+    body('email', "Invalid Email").isEmail(),
+    async (req,res)=>{
+        try{
+            console.log("inside login endpoint");
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+
+            const {email, password} = req.body;
+            // find if email exists
+            let user = await User.findOne({email})
+            if(!user){
+                return res.status(400).json({"Error": "Sorry, Wrong credentials, email"})
+            }
+
+            const compare =  await bcrypt.compare(password,user.password);
+
+            if(!compare){
+                return res.status(400).json({"Error": "Sorry, Wrong credentials, pass"})
+            }
+
+            const jwtData = {
+                user:{
+                    id:user.id
+                }
+            };
+
+            var authToken = jwt.sign(jwtData, jwtSecret);
+            //console.log(authToken)
+            res.json({authToken});
+        }
+        catch(error){
+            console.error(error.message);
+            res.status(500).json({"Error":error.message});
+        }
+    }
+)
+
+
+//Get user from auth token - Login required
+router.post('/getuser', fetchuser,
+    async (req,res)=>{
+        try{
+            console.log("inside getuser endpoint");
+
+            const userId = req.user.id;
+            // find if email exists
+            let user = await User.findById(userId).select("-password");
+            if(!user){
+                return res.status(400).json({"Error": "Sorry, Wrong auth token"})
+            }
+
+            res.json({user});
+        }
+        catch(error){
+            console.error(error.message);
+            res.status(500).json({"Error":error.message});
+        }
+    }
+)
+
 
 //Add a new User to the User Model - GET
 router.get('/', 
