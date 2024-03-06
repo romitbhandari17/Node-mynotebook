@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const NotesSchema = new Schema({
+    user:{
+        type: Schema.Types.ObjectId,
+        ref: 'user'
+    },
     title: {
         type: String, // String is shorthand for {type: String}
         required: true,

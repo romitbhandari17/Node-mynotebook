@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const jwtSecret = process.env.JWT_SECRET;
 const fetchuser = require("../middleware/fetchuser");
 
-//Create a new User to the User Model - No login required
+//Route 1: Create a new User to the User Model - GET- No login required
 router.post('/createuser', 
     body('name', 'Name cant be empty').notEmpty(),
     body('email', "Invalid Email").isEmail(),
@@ -55,7 +55,7 @@ router.post('/createuser',
     }
 )
 
-//Authenticate user - login end point - No Login required
+//Route 2: Authenticate user - POST - No Login required
 router.post('/login', 
     body('password', 'Password cant be empty').notEmpty(),
     body('email', "Invalid Email").isEmail(),
@@ -98,7 +98,7 @@ router.post('/login',
 )
 
 
-//Get user from auth token - Login required
+//Route 3: Get user from auth token, POST - Login required
 router.post('/getuser', fetchuser,
     async (req,res)=>{
         try{
@@ -121,8 +121,8 @@ router.post('/getuser', fetchuser,
 )
 
 
-//Add a new User to the User Model - GET
-router.get('/', 
+//Route 4: Add a new User to the User Model - GET, No login required
+router.get('/createuser', 
     query('name', 'Name cant be empty').notEmpty(),
     query('email', "Invalid Email").isEmail(),
     // password must be at least 5 chars long
