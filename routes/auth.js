@@ -62,6 +62,7 @@ router.post('/login',
     async (req,res)=>{
         try{
             console.log("inside login endpoint");
+            let success = false;
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 return res.status(400).json({ errors: errors.array() });
@@ -71,13 +72,13 @@ router.post('/login',
             // find if email exists
             let user = await User.findOne({email})
             if(!user){
-                return res.status(400).json({"Error": "Sorry, Wrong credentials, email"})
+                return res.status(400).json({success:success, "Error": "Sorry, Wrong credentials, email"})
             }
 
             const compare =  await bcrypt.compare(password,user.password);
 
             if(!compare){
-                return res.status(400).json({"Error": "Sorry, Wrong credentials, pass"})
+                return res.status(400).json({success:success, "Error": "Sorry, Wrong credentials, pass"})
             }
 
             const jwtData = {
@@ -86,9 +87,12 @@ router.post('/login',
                 }
             };
 
+            console.log("secret=",jwtSecret)
+            console.log("jwt data=",jwtData)
+            success=true;
             var authToken = jwt.sign(jwtData, jwtSecret);
             //console.log(authToken)
-            res.json({authToken});
+            res.json({success:success, authToken:authToken});
         }
         catch(error){
             console.error(error.message);

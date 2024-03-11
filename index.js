@@ -1,6 +1,7 @@
 const connectMongo = require("./db");
 const express = require('express');
 const app = express();
+var cors = require('cors');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 5000;
@@ -9,6 +10,9 @@ connectMongo();
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+app.use(cors())
+
 
 app.get('/', (req, res) => {
     res.send('Hello World!')
