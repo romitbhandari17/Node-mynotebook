@@ -14,17 +14,18 @@ router.post('/createuser',
     // password must be at least 5 chars long
     body('password', 'Password must be at least 5 characters').isLength({ min: 5 }),
     async (req,res)=>{
+        let success=false;
         try{
             console.log("inside createuser endpoint");
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                return res.status(400).json({ errors: errors.array() });
+                return res.status(400).json({ success:success,errors: errors.array() });
             }
 
             // find if duplicate email
             let user = await User.findOne({email:req.body.email})
             if(user){
-                return res.status(400).json({"Error": "Sorry, A user with this email already exists!!"})
+                return res.status(400).json({success:success,"Error": "Sorry, A user with this email already exists!!"})
             }
             
             const salt = await bcrypt.genSalt(10);
@@ -44,13 +45,14 @@ router.post('/createuser',
                 }
             };
 
+            success=true;
             var authToken = jwt.sign(jwtData, jwtSecret);
             //console.log(authToken)
-            res.json({authToken});
+            res.json({success,authToken});
         }
         catch(error){
             console.error(error.message);
-            res.status(500).json({"Error":error.message});
+            res.status(500).json({success:success,"Error":error.message});
         }
     }
 )
